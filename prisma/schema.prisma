@@ -1,0 +1,348 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  FOUNDER
+  OPERATOR
+  ANALYST
+  ADMIN
+}
+
+enum MoatType {
+  NETWORK
+  DATA
+  SUPPLY
+  BRAND
+  REGULATION
+  TECH
+}
+
+enum CreativeTechnique {
+  SCAMPER
+  REVERSE_BRAINSTORMING
+  FIRST_PRINCIPLES
+  TEN_X_VS_TEN_PERCENT
+  ANALOGICAL_THINKING
+  CONSTRAINT_LADDER
+  FUTURE_BACK
+}
+
+enum IdeaStatus {
+  DISCOVERY
+  VALIDATING
+  ACTIVE
+  PARKED
+  KILLED
+}
+
+enum ExperimentDecision {
+  SCALE
+  ITERATE
+  PIVOT
+  KILL
+}
+
+enum ExperimentStatus {
+  PLANNED
+  RUNNING
+  COMPLETED
+}
+
+enum VentureStage {
+  THESIS
+  VALIDATION
+  BUILD
+  SCALE
+  OPTIMIZE
+}
+
+enum MilestoneStatus {
+  PLANNED
+  IN_PROGRESS
+  BLOCKED
+  COMPLETED
+}
+
+enum NoteType {
+  STRATEGIC_PRIORITY
+  THESIS
+  LESSON
+  RISK
+  GENERAL
+}
+
+enum Scenario {
+  BASE
+  AGGRESSIVE
+  CONSERVATIVE
+}
+
+model User {
+  id            String            @id @default(cuid())
+  email         String            @unique
+  passwordHash  String
+  fullName      String
+  role          Role              @default(FOUNDER)
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+  ideas         Idea[]
+  evaluations   Evaluation[]
+  experiments   Experiment[]
+  ventures      Venture[]
+  allocations   CapitalAllocation[]
+  founderMetrics FounderMetric[]
+  moatMetrics   MoatMetric[]
+  comparisons   Comparison[]
+  notes         Note[]
+}
+
+model Idea {
+  id                 String             @id @default(cuid())
+  userId             String
+  title              String
+  industry           String
+  targetMarket       String
+  corePainPoint      String
+  uniqueEdge         String
+  revenueModel       String
+  tam                Float
+  sam                Float
+  som                Float
+  capitalIntensity   Int
+  scalabilityRating  Int
+  moatType           MoatType
+  speedTo100CrYears  Float
+  strategicFitScore  Int
+  creativeTechnique  CreativeTechnique
+  status             IdeaStatus         @default(DISCOVERY)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  evaluation         Evaluation?
+  experiments        Experiment[]
+  venture            Venture?
+  notes              Note[]
+}
+
+model Evaluation {
+  id                    String   @id @default(cuid())
+  userId                String
+  ideaId                String   @unique
+  impact                Int
+  confidence            Int
+  ease                  Int
+  iceScore              Float
+  assumptions           Json
+  criticalAssumption    String
+  validationExperiment  String
+  validationResult      String
+  swotStrengths         String
+  swotWeaknesses        String
+  swotOpportunities     String
+  swotThreats           String
+  killCriteriaChecklist Json
+  viabilityIndex        Float
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  idea                  Idea     @relation(fields: [ideaId], references: [id], onDelete: Cascade)
+}
+
+model Experiment {
+  id                      String             @id @default(cuid())
+  userId                  String
+  ideaId                  String?
+  ventureId               String?
+  hypothesis              String
+  experimentType          String
+  cost                    Float
+  startDate               DateTime
+  endDate                 DateTime
+  result                  String
+  learning                String
+  decision                ExperimentDecision
+  status                  ExperimentStatus   @default(PLANNED)
+  validationStrengthScore Float
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
+  user                    User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  idea                    Idea?              @relation(fields: [ideaId], references: [id], onDelete: SetNull)
+  venture                 Venture?           @relation(fields: [ventureId], references: [id], onDelete: SetNull)
+}
+
+model Venture {
+  id                    String             @id @default(cuid())
+  userId                String
+  ideaId                String?            @unique
+  name                  String
+  description           String
+  stage                 VentureStage       @default(VALIDATION)
+  ninetyDayBattlePlan   String
+  weeklySprintPlanner   String
+  hiringRoadmap         String
+  partnershipsLog       String
+  bottleneckTracker     String
+  riskLog               String
+  monthlyBurn           Float
+  runwayMonths          Float
+  currentArr            Float
+  targetArr             Float              @default(1000000000)
+  executionScore        Int                @default(0)
+  priorityRank          Int                @default(1)
+  startDate             DateTime           @default(now())
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  user                  User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  idea                  Idea?              @relation(fields: [ideaId], references: [id], onDelete: SetNull)
+  experiments           Experiment[]
+  financialModels       FinancialModel[]
+  kpis                  KPI[]
+  milestones            Milestone[]
+  capitalAllocations    CapitalAllocation[]
+  moatMetrics           MoatMetric[]
+  notes                 Note[]
+}
+
+model FinancialModel {
+  id                   String   @id @default(cuid())
+  ventureId            String
+  scenario             Scenario @default(BASE)
+  currentRevenue       Float
+  monthlyGrowthRate    Float
+  grossMargin          Float
+  cac                  Float
+  ltv                  Float
+  churn                Float
+  expectedIrr          Float
+  paybackPeriodMonths  Int
+  breakEvenMonth       Int
+  projectedRevenue36   Json
+  arrProgression       Json
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  venture              Venture  @relation(fields: [ventureId], references: [id], onDelete: Cascade)
+
+  @@unique([ventureId, scenario])
+}
+
+model KPI {
+  id             String   @id @default(cuid())
+  ventureId      String
+  weekStart      DateTime
+  mrr            Float
+  cac            Float
+  ltv            Float
+  churn          Float
+  grossMargin    Float
+  conversionRate Float
+  nps            Float
+  createdAt      DateTime @default(now())
+  venture        Venture  @relation(fields: [ventureId], references: [id], onDelete: Cascade)
+
+  @@index([ventureId, weekStart])
+}
+
+model Milestone {
+  id          String          @id @default(cuid())
+  ventureId   String
+  title       String
+  description String
+  dueDate     DateTime
+  owner       String
+  status      MilestoneStatus @default(PLANNED)
+  completedAt DateTime?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  venture     Venture         @relation(fields: [ventureId], references: [id], onDelete: Cascade)
+}
+
+model CapitalAllocation {
+  id                     String   @id @default(cuid())
+  userId                 String
+  ventureId              String
+  capitalRequired        Float
+  capitalDeployed        Float
+  capitalAvailable       Float
+  roiProjection          Float
+  expectedIrr            Float
+  paybackPeriodMonths    Int
+  sensitivityBase        Float
+  sensitivityAggressive  Float
+  sensitivityConservative Float
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  venture                Venture  @relation(fields: [ventureId], references: [id], onDelete: Cascade)
+}
+
+model FounderMetric {
+  id                 String   @id @default(cuid())
+  userId             String
+  date               DateTime
+  deepWorkHours      Float
+  strategicDecisions Int
+  outreachCount      Int
+  learningHours      Float
+  sleepHours         Float
+  workoutMinutes     Int
+  wins               String
+  failures           String
+  leverageGained     String
+  nextWeekFocus      String
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+model MoatMetric {
+  id                 String   @id @default(cuid())
+  userId             String
+  ventureId          String
+  date               DateTime @default(now())
+  dataAssetsBuilt    Int
+  supplierLockIns    Int
+  customerLockInScore Float
+  networkEffectsGrowth Float
+  switchingCostIndex Float
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  venture            Venture  @relation(fields: [ventureId], references: [id], onDelete: Cascade)
+
+  @@index([ventureId, date])
+}
+
+model Comparison {
+  id         String   @id @default(cuid())
+  userId     String
+  name       String
+  ideaIds    String[]
+  metrics    Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Note {
+  id         String   @id @default(cuid())
+  userId     String
+  ventureId  String?
+  ideaId     String?
+  type       NoteType @default(GENERAL)
+  title      String
+  content    String
+  pinned     Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  venture    Venture? @relation(fields: [ventureId], references: [id], onDelete: SetNull)
+  idea       Idea?    @relation(fields: [ideaId], references: [id], onDelete: SetNull)
+}
