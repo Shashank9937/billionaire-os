@@ -1,9 +1,10 @@
 "use client";
 
+import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-const routes: Record<string, string> = {
+const routes: Record<string, Route> = {
   "1": "/dashboard",
   "2": "/opportunity-intelligence",
   "3": "/decision-engine",

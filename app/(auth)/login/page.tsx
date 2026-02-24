@@ -1,9 +1,9 @@
 type LoginPageProps = {
-  searchParams?: { error?: string } | Promise<{ error?: string }>;
+  searchParams?: Promise<{ error?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: LoginPageProps) {
-  const params = searchParams ? await Promise.resolve(searchParams) : {};
+  const params = searchParams ? await searchParams : {};
   const error = params?.error;
 
   return (

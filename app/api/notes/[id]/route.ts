@@ -11,7 +11,7 @@ const noteUpdateSchema = z.object({
 });
 
 type Params = {
-  params: { id: string } | Promise<{ id: string }>;
+  params: Promise<{ id: string }>;
 };
 
 export async function POST(request: NextRequest, { params }: Params) {
@@ -20,7 +20,7 @@ export async function POST(request: NextRequest, { params }: Params) {
     return fail("Unauthorized", 401);
   }
 
-  const { id } = await Promise.resolve(params);
+  const { id } = await params;
   const payload = await request.json();
   const parsed = noteUpdateSchema.safeParse({
     ...payload,
@@ -63,7 +63,7 @@ export async function DELETE(request: NextRequest, { params }: Params) {
     return fail("Unauthorized", 401);
   }
 
-  const { id } = await Promise.resolve(params);
+  const { id } = await params;
   const note = await prisma.note.findFirst({ where: { id, userId: session.sub } });
   if (!note) {
     return fail("Priority not found", 404);

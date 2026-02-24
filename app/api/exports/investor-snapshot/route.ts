@@ -67,8 +67,10 @@ export async function GET(request: NextRequest) {
   draw("Focus remains on high-leverage B2B ventures with measurable unit economics and defensibility.");
 
   const bytes = await pdfDoc.save();
+  const body = new Uint8Array(bytes.byteLength);
+  body.set(bytes);
 
-  return new Response(bytes, {
+  return new Response(body.buffer, {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",

@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import type { Route } from "next";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+const navItems: Array<{ href: Route; label: string; key?: string }> = [
   { href: "/dashboard", label: "Command Center", key: "Alt+1" },
   { href: "/opportunity-intelligence", label: "Opportunity Engine", key: "Alt+2" },
   { href: "/decision-engine", label: "Decision Engine", key: "Alt+3" },
